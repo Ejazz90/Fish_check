@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102d36">
+  <title>FishLog — Your fishing journal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#"><span class="brand-mark">〰</span><span>Fish<span class="brand-light">Log</span></span></a>
+      <div class="sidebar-label">YOUR JOURNAL</div>
+      <button class="nav-item active" data-view="catches"><span>▦</span> My catches</button>
+      <button class="nav-item" data-view="stats"><span>◷</span> Statistics</button>
+      <div class="sidebar-bottom">
+        <div class="user-card">
+          <div class="avatar" id="user-avatar">F</div>
+          <div class="user-meta"><strong id="user-email">Not signed in</strong><small id="user-status">Your fishing journal</small></div>
+        </div>
+        <button class="text-button" id="signout-btn" hidden>Sign out ↗</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><div class="eyebrow" id="today-label">YOUR FISHING JOURNAL</div><h1 id="page-title">My catches</h1></div>
+        <button class="primary-btn" id="add-catch-btn"><span>＋</span> Log a catch</button>
+      </header>
+
+      <section id="auth-view" class="auth-wrap" hidden>
+        <div class="auth-art">
+          <div class="auth-art-copy"><span class="eyebrow light">YOUR NEXT GREAT STORY STARTS HERE</span><h2>Keep every<br>catch memorable.</h2><p>Identify your fish, save the details, and build a lifetime of fishing memories.</p></div>
+          <div class="water-lines">〰 〰 〰 〰 〰</div>
+        </div>
+        <div class="auth-panel">
+          <div class="auth-tabs"><button class="auth-tab active" data-auth="signin">Sign in</button><button class="auth-tab" data-auth="signup">Create account</button></div>
+          <h2 id="auth-heading">Welcome back</h2><p class="muted" id="auth-subtitle">Sign in to open your fishing journal.</p>
+          <form id="auth-form">
+            <label>Email address<input type="email" id="auth-email" placeholder="you@example.com" required autocomplete="email"></label>
+            <label>Password<input type="password" id="auth-password" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password"></label>
+            <button class="primary-btn full" id="auth-submit">Sign in <span>→</span></button>
+          </form>
+          <p class="auth-note" id="auth-message">Your catches are private to your account.</p>
+        </div>
+      </section>
+
+      <section id="journal-view">
+        <div class="welcome-strip">
+          <div><span class="eyebrow light">THE ONE THAT DIDN'T GET AWAY</span><h2>Your fishing story,<br><em>one catch at a time.</em></h2><p>Keep track of the fish, the numbers, and the memories.</p></div>
+          <div class="strip-icon">🎣</div>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon">🐟</span><span class="stat-label">TOTAL CATCHES</span><strong id="total-catches">0</strong><small>Logged in your journal</small></article>
+          <article class="stat-card"><span class="stat-icon">🏆</span><span class="stat-label">HEAVIEST CATCH</span><strong id="heaviest-catch">—</strong><small id="heaviest-species">Add a weight to track it</small></article>
+          <article class="stat-card"><span class="stat-icon">📏</span><span class="stat-label">LONGEST CATCH</span><strong id="longest-catch">—</strong><small id="longest-species">Add a length to track it</small></article>
+          <article class="stat-card"><span class="stat-icon">🧭</span><span class="stat-label">SPECIES LOGGED</span><strong id="species-count">0</strong><small>Different species</small></article>
+        </div>
+
+        <div class="section-head"><div><span class="eyebrow">YOUR COLLECTION</span><h2>All catches <span class="count-pill" id="catch-count">0</span></h2></div><button class="secondary-btn" id="clear-filters">Clear filters</button></div>
+        <div class="toolbar">
+          <div class="search-wrap"><span>⌕</span><input id="search-input" type="search" placeholder="Search species, location, notes…"></div>
+          <select id="species-filter" aria-label="Filter by species"><option value="">All species</option></select>
+          <select id="sort-select" aria-label="Sort catches"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="species">Species A–Z</option><option value="weight-desc">Heaviest first</option><option value="weight-asc">Lightest first</option><option value="length-desc">Longest first</option><option value="length-asc">Shortest first</option></select>
+        </div>
+        <div id="catch-grid" class="catch-grid"></div>
+        <div id="empty-state" class="empty-state"><div class="empty-illustration">🐠</div><h3>Your next catch belongs here</h3><p>Upload a fish photo to identify it and start your collection.</p><button class="primary-btn" id="empty-add-btn">＋ Log your first catch</button></div>
+      </section>
+
+      <section id="stats-view" hidden>
+        <div class="section-head"><div><span class="eyebrow">YOUR PROGRESS</span><h2>Fishing statistics</h2></div></div>
+        <div class="stats-grid stats-grid-wide">
+          <article class="stat-card"><span class="stat-label">TOTAL CATCHES</span><strong id="stats-total">0</strong></article>
+          <article class="stat-card"><span class="stat-label">UNIQUE SPECIES</span><strong id="stats-species">0</strong></article>
+          <article class="stat-card"><span class="stat-label">TOTAL RECORDED WEIGHT</span><strong id="stats-weight">—</strong></article>
+        </div>
+        <article class="panel"><span class="eyebrow">SPECIES BREAKDOWN</span><h2>What's biting?</h2><div id="species-breakdown" class="breakdown"></div></article>
+      </section>
+      <footer>FISHLOG <span>·</span> MADE FOR THE LOVE OF FISHING</footer>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="catch-modal" hidden>
+    <section class="modal">
+      <div class="modal-head"><div><span class="eyebrow">ADD TO YOUR JOURNAL</span><h2>Log a catch</h2></div><button class="icon-btn" id="close-modal" aria-label="Close">×</button></div>
+      <form id="catch-form">
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="fish-photo" accept="image/*" hidden>
+          <div id="photo-placeholder"><div class="upload-icon">＋</div><strong>Drop a fish photo here</strong><span>or click to browse · JPG, PNG, WEBP</span></div>
+          <img id="photo-preview" alt="Selected fish" hidden>
+          <button type="button" class="remove-photo" id="remove-photo" hidden>Remove photo</button>
+        </div>
+        <div class="ai-row"><div><strong>Fish identification</strong><p id="ai-status">Upload a photo, then let AI suggest the species.</p></div><button type="button" class="ai-btn" id="identify-btn" disabled>✦ Identify fish</button></div>
+        <div class="form-grid">
+          <label class="span-2">Species / fish name<input id="species-input" placeholder="e.g. Largemouth bass" required></label>
+          <label>Length <div class="unit-input"><input type="number" id="length-input" min="0" step="0.1" placeholder="e.g. 18"><select id="length-unit"><option value="in">in</option><option value="cm">cm</option></select></div></label>
+          <label>Weight <div class="unit-input"><input type="number" id="weight-input" min="0" step="0.01" placeholder="e.g. 3.5"><select id="weight-unit"><option value="lb">lb</option><option value="kg">kg</option><option value="oz">oz</option></select></div></label>
+          <label>Date caught<input type="date" id="date-input" required></label>
+          <label>Location<input id="location-input" placeholder="Lake, river, or area"></label>
+          <label class="span-2">Bait / lure<input id="bait-input" placeholder="What did you catch it on?"></label>
+          <label class="span-2">Notes<textarea id="notes-input" rows="3" placeholder="Weather, conditions, the story behind this catch…"></textarea></label>
+        </div>
+        <div class="modal-actions"><button type="button" class="secondary-btn" id="cancel-modal">Cancel</button><button class="primary-btn" id="save-catch-btn">Save catch <span>→</span></button></div>
+        <p class="form-error" id="form-error"></p>
+      </form>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
